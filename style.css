@@ -1,0 +1,111 @@
+:root {
+  --large-font-size: 15px;
+  --small-font-size: 10px;
+  --large-grid-color: rgba(255, 255, 255, 0.7);
+  --small-grid-color: #00d2ff; /* 기본 색상 (Dark/Satellite) */
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: #000;
+  color: #fff;
+}
+#map {
+  height: 100vh;
+  width: 100%;
+}
+
+/* 우측 정보 패널 */
+.control-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: rgba(20, 20, 20, 0.95);
+  padding: 15px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+.status {
+  font-size: 12px;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: bold;
+}
+.ok {
+  background: #1b5e20;
+}
+.err {
+  background: #b71c1c;
+}
+#details {
+  border-top: 1px solid #444;
+  padding-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 2px;
+}
+.lbl {
+  color: #cdcdcd;
+  font-size: 11px;
+}
+.val {
+  color: var(--small-grid-color);
+  font-weight: bold;
+}
+
+/* 격자 텍스트 스타일 */
+.large-grid-label,
+.small-grid-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  /* 줌 레벨에 따라 변경될 투명도 변수 적용 */
+  opacity: var(--label-opacity, 1) !important;
+  transition: opacity 0.2s; /* 부드러운 전환 효과 */
+}
+
+.large-grid-label {
+  color: var(--large-grid-color) !important;
+  font-weight: bold !important;
+  font-size: var(--large-font-size) !important;
+}
+
+.small-grid-label {
+  color: var(--small-grid-color) !important;
+  font-weight: normal !important;
+  text-shadow: 1px 1px 2px black !important;
+  font-size: var(--small-font-size) !important;
+  pointer-events: none;
+}
+
+/* 레이어 컨트롤 스타일 */
+.leaflet-control-layers {
+  background: #222 !important;
+  color: white !important;
+}
+.leaflet-control-layers-expanded {
+  padding: 10px !important;
+  font-size: 15px !important;
+}
+
+.btn-file {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background: #34495e;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 4px;
+}

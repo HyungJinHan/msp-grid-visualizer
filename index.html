@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>해양공간관리 격자 시각화</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="control-panel">
+      <button
+        class="btn-file"
+        onclick="document.getElementById('fileInput').click()">
+        CSV 파일 직접 선택
+      </button>
+      <input type="file" id="fileInput" style="display: none" accept=".csv" />
+      <div id="status" class="status">데이터 로딩 중...</div>
+      <div id="details">상세 격자(파란색)를 클릭하면 정보가 나타납니다.</div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
