@@ -67,6 +67,11 @@ map.on("baselayerchange", function (e) {
         "--large-grid-color",
         "rgba(0, 0, 0, 0.5)",
       );
+    } else {
+      document.documentElement.style.setProperty(
+        "--large-grid-color",
+        "rgba(255, 255, 255, 0.7)",
+      );
     }
   } else {
     currentTheme = "dark";
@@ -154,6 +159,8 @@ export function processCSV(results) {
           var area = calculatePolygonArea(latlngs);
           var html = formatDetailsHTML(props);
           html += `<div class="grid-area">면적: ${area.toFixed(2)} km²</div>`;
+          html += `<div class="lbl">영해 내측 해양공간*은 3′(약 5km)✕3′</div>`;
+          html += `<div class="lbl">배타적 경제수역 경계 내측 해양공간은 15′(약 25km)✕15′</div>`;
           detailsEl.innerHTML = html;
         });
         cS++;
