@@ -27,6 +27,53 @@ body {
   border-radius: 8px;
   width: 320px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* 토글 버튼 (기본적으로 숨김) */
+.toggle-btn {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1001;
+  padding: 10px 15px;
+  background: #34495e;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* 모바일 화면 (600px 이하) */
+@media (max-width: 600px) {
+  .control-panel {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 15px 15px 0 0;
+    box-sizing: border-box;
+    max-height: 50vh;
+    overflow-y: auto;
+    transform: translateY(100%); /* 기본적으로 숨김 */
+  }
+
+  .control-panel.active {
+    transform: translateY(0);
+  }
+
+  .toggle-btn {
+    display: block;
+  }
+
+  /* 모바일에서 Leaflet 컨트롤 위치 조정 (버튼 아래로) */
+  .leaflet-top.leaflet-right {
+    top: 60px;
+  }
 }
 .status {
   font-size: 12px;
@@ -77,14 +124,14 @@ body {
 
 .large-grid-label {
   color: var(--large-grid-color) !important;
-  font-weight: bold !important;
+  font-weight: bolder !important;
   font-size: var(--large-font-size) !important;
 }
 
 .small-grid-label {
   color: var(--small-grid-color) !important;
   font-weight: normal !important;
-  text-shadow: 1px 1px 2px black !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
   font-size: var(--small-font-size) !important;
   pointer-events: none;
 }

@@ -1,194 +1,87 @@
-import {
-  formatDetailsHTML,
-  getWktKey,
-  parseRowProps,
-} from "./utils/dataUtils.js";
+import { processCSVData } from "./utils/dataUtils.js";
+import { MapManager } from "./utils/mapManager.js";
 import {
   calculatePolygonArea,
   parseWKTToLatLngs,
   updateLabelScales,
 } from "./utils/mapUtils.js";
+import { UIManager } from "./utils/uiManager.js";
 
 window.onerror = function (msg, url, line) {
-  var s = document.getElementById("status");
-  if (s) {
-    s.textContent = "에러: " + msg + " (L:" + line + ")";
-    s.className = "status err";
-  }
+  uiManager.updateStatus("에러: " + msg + " (L:" + line + ")", true);
 };
 
-// 1. 베이스 맵 정의
-var darkMap = L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  { attribution: "&copy; CARTO" },
-);
-var lightMap = L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  { attribution: "&copy; OSM" },
-);
-var satelliteMap = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-  { attribution: "&copy; Esri" },
-);
-var googleMap = L.tileLayer(
-  "https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
-  { attribution: "&copy; Google" },
+const mapManager = new MapManager();
+const uiManager = new UIManager(
+  document.getElementById("status"),
+  document.getElementById("details"),
 );
 
-// 2. 지도 초기화
-var map = L.map("map", {
-  center: [34.5, 127],
-  zoom: 7,
-  layers: [darkMap],
+// 패널 토글 로직
+const toggleBtn = document.getElementById("togglePanel");
+const controlPanel = document.getElementById("controlPanel");
+
+toggleBtn.onclick = () => {
+  controlPanel.classList.toggle("active");
+};
+
+// 격자 클릭 시 패널 열기 (모바일 대응)
+mapManager.map.on("popupopen", () => {
+  if (window.innerWidth <= 600) {
+    controlPanel.classList.add("active");
+  }
 });
 
-// 3. 레이어 컨트롤
-var baseMaps = {
-  "어두운 지도": darkMap,
-  "일반 지도": lightMap,
-  "위성 지도": satelliteMap,
-  "구글 위성 지도": googleMap,
-};
-L.control.layers(baseMaps, null, { position: "topleft" }).addTo(map);
+// 지도 빈 곳 클릭 시 선택 해제
+mapManager.map.on("click", () => {
+  mapManager.clearSelection();
+  uiManager.showDetails("상세 격자(파란색)를 클릭하면 정보가 나타납니다.");
+});
 
-// 4. 동적 스타일 처리
-var currentTheme = "dark";
-var statusEl = document.getElementById("status");
-var detailsEl = document.getElementById("details");
-var largeLayer = L.featureGroup().addTo(map);
-var smallLayer = L.featureGroup().addTo(map);
+mapManager.map.on("baselayerchange", function (e) {
+  uiManager.updateTheme(e.name);
 
-map.on("baselayerchange", function (e) {
-  if (e.name === "일반 지도" || e.name === "구글 위성 지도") {
-    currentTheme = "light";
-    document.documentElement.style.setProperty("--small-grid-color", "orange");
-    if (e.name === "일반 지도") {
-      document.documentElement.style.setProperty(
-        "--large-grid-color",
-        "rgba(0, 0, 0, 0.5)",
-      );
-    } else {
-      document.documentElement.style.setProperty(
-        "--large-grid-color",
-        "rgba(255, 255, 255, 0.7)",
-      );
-    }
-  } else {
-    currentTheme = "dark";
-    document.documentElement.style.setProperty("--small-grid-color", "#00d2ff");
-    document.documentElement.style.setProperty(
-      "--large-grid-color",
-      "rgba(255, 255, 255, 0.7)",
-    );
-  }
-
-  var color = getComputedStyle(document.documentElement)
+  const color = getComputedStyle(document.documentElement)
     .getPropertyValue("--small-grid-color")
     .trim();
-  var colorL = getComputedStyle(document.documentElement)
+  const colorL = getComputedStyle(document.documentElement)
     .getPropertyValue("--large-grid-color")
     .trim();
 
-  // 기존 레이어 스타일 업데이트
-  smallLayer.setStyle({
-    color: color,
-    fillColor: color,
-  });
-  largeLayer.setStyle({
-    color: colorL,
-  });
+  const { largeLayer, smallLayer } = mapManager.getLayers();
+  smallLayer.setStyle({ color: color, fillColor: color });
+  largeLayer.setStyle({ color: colorL });
+
+  // 선택된 격자가 있다면 하이라이트 재적용
+  if (mapManager.selectedLayer) {
+    mapManager.highlightGrid(mapManager.selectedLayer);
+  }
 });
 
-map.on("zoomend", () => updateLabelScales(map));
-updateLabelScales(map);
+mapManager.map.on("zoomend", () => updateLabelScales(mapManager.map));
+updateLabelScales(mapManager.map);
 
-export function processCSV(results) {
-  try {
-    largeLayer.clearLayers();
-    smallLayer.clearLayers();
-
-    var data = results.data;
-    var wktKey = getWktKey(data);
-
-    var cL = 0,
-      cS = 0;
-    data.forEach(function (row) {
-      var latlngs = parseWKTToLatLngs(row[wktKey]);
-      if (!latlngs) return;
-
-      var props = parseRowProps(row);
-      var isL = (props["격자분류명"] || "").indexOf("250000") !== -1;
-      var gridName = props["격자명"] || "";
-
-      if (isL) {
-        var colorL = "white";
-        var poly = L.polygon(latlngs, {
-          color: colorL,
-          weight: 2,
-          opacity: 0.3,
-          fillOpacity: 0,
-          interactive: false,
-        }).addTo(largeLayer);
-        poly.bindTooltip(gridName, {
-          permanent: true,
-          direction: "center",
-          className: "large-grid-label",
-        });
-        cL++;
-      } else {
-        var color = "#00d2ff";
-        var poly = L.polygon(latlngs, {
-          color: color,
-          weight: 1,
-          opacity: 0.6,
-          fillColor: color,
-          fillOpacity: 0.15,
-        }).addTo(smallLayer);
-
-        var nameParts = gridName.split("-");
-        if (nameParts.length >= 3) {
-          var shortName = nameParts[nameParts.length - 1];
-          poly.bindTooltip(shortName, {
-            permanent: true,
-            direction: "center",
-            className: "small-grid-label",
-          });
-        }
-        poly.on("click", function (e) {
-          L.DomEvent.stopPropagation(e);
-          var area = calculatePolygonArea(latlngs);
-          var html = formatDetailsHTML(props);
-          html += `<div class="grid-area">면적: ${area.toFixed(2)} km²</div>`;
-          html += `<div class="lbl">영해 내측 해양공간*은 3′(약 5km)✕3′</div>`;
-          html += `<div class="lbl">배타적 경제수역 경계 내측 해양공간은 15′(약 25km)✕15′</div>`;
-          detailsEl.innerHTML = html;
-        });
-        cS++;
-      }
-    });
-
-    largeLayer.bringToFront();
-    if (cL + cS > 0) {
-      var bounds = L.featureGroup([largeLayer, smallLayer]).getBounds();
-      if (bounds.isValid()) map.fitBounds(bounds);
-      statusEl.textContent = "완료 (대형:" + cL + ", 상세:" + cS + ")";
-      statusEl.className = "status ok";
-    }
-  } catch (e) {
-    statusEl.textContent = "에러: " + e.message;
-    statusEl.className = "status err";
-  }
+function handleCSVComplete(results) {
+  const { largeLayer, smallLayer } = mapManager.getLayers();
+  processCSVData(results, {
+    largeLayer,
+    smallLayer,
+    mapManager,
+    uiManager,
+    parseWKTToLatLngs,
+    calculatePolygonArea,
+  });
 }
 
 var csvPath = "csv/해양수산부_해양공간관리계획도격자_20240307.csv";
+
 Papa.parse(csvPath, {
   download: true,
   header: true,
   skipEmptyLines: true,
-  complete: processCSV,
+  complete: handleCSVComplete,
   error: function () {
-    statusEl.textContent = "자동 로드 실패 (파일 직접 선택)";
-    statusEl.className = "status err";
+    uiManager.updateStatus("자동 로드 실패 (파일 직접 선택)", true);
   },
 });
 
@@ -196,6 +89,6 @@ document.getElementById("fileInput").onchange = function (e) {
   Papa.parse(e.target.files[0], {
     header: true,
     skipEmptyLines: true,
-    complete: processCSV,
+    complete: handleCSVComplete,
   });
 };

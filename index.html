@@ -11,7 +11,10 @@
   </head>
   <body>
     <div id="map"></div>
-    <div class="control-panel">
+    <!-- 모바일용 패널 토글 버튼 -->
+    <button id="togglePanel" class="toggle-btn">정보 패널 열기/닫기</button>
+
+    <div class="control-panel" id="controlPanel">
       <button
         class="btn-file"
         onclick="document.getElementById('fileInput').click()">
@@ -21,6 +24,7 @@
       <div id="status" class="status">데이터 로딩 중...</div>
       <div id="details">상세 격자(파란색)를 클릭하면 정보가 나타납니다.</div>
     </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script type="module" src="main.js"></script>

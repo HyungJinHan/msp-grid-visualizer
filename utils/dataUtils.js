@@ -28,3 +28,80 @@ export function formatDetailsHTML(props) {
   }
   return h;
 }
+
+export function processCSVData(results, { largeLayer, smallLayer, mapManager, uiManager, parseWKTToLatLngs, calculatePolygonArea }) {
+  try {
+    largeLayer.clearLayers();
+    smallLayer.clearLayers();
+
+    var data = results.data;
+    var wktKey = getWktKey(data);
+
+    var cL = 0,
+      cS = 0;
+    data.forEach(function (row) {
+      var latlngs = parseWKTToLatLngs(row[wktKey]);
+      if (!latlngs) return;
+
+      var props = parseRowProps(row);
+      var isL = (props["격자분류명"] || "").indexOf("250000") !== -1;
+      var gridName = props["격자명"] || "";
+
+      if (isL) {
+        var colorL = "white";
+        var poly = L.polygon(latlngs, {
+          color: colorL,
+          weight: 2,
+          opacity: 0.3,
+          fillOpacity: 0,
+          interactive: false,
+        }).addTo(largeLayer);
+        poly.bindTooltip(gridName, {
+          permanent: true,
+          direction: "center",
+          className: "large-grid-label",
+        });
+        cL++;
+      } else {
+        var color = "#00d2ff";
+        var poly = L.polygon(latlngs, {
+          color: color,
+          weight: 1,
+          opacity: 0.6,
+          fillColor: color,
+          fillOpacity: 0.15,
+        }).addTo(smallLayer);
+
+        var nameParts = gridName.split("-");
+        if (nameParts.length >= 3) {
+          var shortName = nameParts[nameParts.length - 1];
+          poly.bindTooltip(shortName, {
+            permanent: true,
+            direction: "center",
+            className: "small-grid-label",
+          });
+        }
+        poly.on("click", function (e) {
+          L.DomEvent.stopPropagation(e);
+          mapManager.highlightGrid(poly); // 격자 강조
+          var area = calculatePolygonArea(latlngs);
+          var html = formatDetailsHTML(props);
+          html += `<div class="grid-area">면적: ${area.toFixed(2)} km²</div>`;
+          html += `<div class="lbl">영해 내측 해양공간*은 3′(약 5km)✕3′</div>`;
+          html += `<div class="lbl">배타적 경제수역 경계 내측 해양공간은 15′(약 25km)✕15′</div>`;
+          uiManager.showDetails(html);
+        });
+        cS++;
+      }
+    });
+
+    largeLayer.bringToFront();
+    if (cL + cS > 0) {
+      var bounds = L.featureGroup([largeLayer, smallLayer]).getBounds();
+      mapManager.fitBounds(bounds);
+      uiManager.updateStatus("완료 (대형:" + cL + ", 상세:" + cS + ")");
+    }
+  } catch (e) {
+    uiManager.updateStatus("에러: " + e.message, true);
+  }
+}
