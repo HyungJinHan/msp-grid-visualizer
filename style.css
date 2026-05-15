@@ -2,7 +2,7 @@
   --large-font-size: 15px;
   --small-font-size: 10px;
   --large-grid-color: rgba(255, 255, 255, 0.7);
-  --small-grid-color: #00d2ff; /* 기본 색상 (Dark/Satellite) */
+  --small-grid-color: #00d2ff;
 }
 body {
   margin: 0;
@@ -10,6 +10,7 @@ body {
   font-family: sans-serif;
   background: #000;
   color: #fff;
+  overflow: hidden;
 }
 #map {
   height: 100vh;
@@ -25,12 +26,157 @@ body {
   background: rgba(20, 20, 20, 0.95);
   padding: 15px;
   border-radius: 8px;
-  width: 320px;
+  width: 280px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
   transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* 토글 버튼 (기본적으로 숨김) */
+/* 검색창 */
+.search-box {
+  display: flex;
+  gap: 5px;
+}
+.search-box input {
+  flex: 1;
+  background: #333;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+}
+.search-box button {
+  background: #34495e;
+  border: none;
+  color: #fff;
+  padding: 0 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 설정 행 */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  background: #222;
+  padding: 8px;
+  border-radius: 4px;
+}
+.setting-row input[type="range"] {
+  width: 100px;
+}
+
+/* 범례 */
+.legend {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.legend-box.large {
+  border: 2px solid #fff;
+  opacity: 0.5;
+}
+.legend-box.small {
+  background: var(--small-grid-color);
+  opacity: 0.8;
+}
+
+/* 로딩 스피너 */
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+.loader-text {
+  margin-top: 15px;
+  font-weight: bold;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 지도 위 버튼들 */
+.map-controls-overlay {
+  position: absolute;
+  top: 10px; /* 줌 버튼과 동일한 높이 */
+  left: 52px; /* 줌 버튼 우측 배치 */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.map-btn {
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #333;
+  font-size: 16px;
+}
+.map-btn:hover {
+  background: #f4f4f4;
+}
+
+/* 내보내기 버튼 */
+.btn-export {
+  background: #27ae60;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-export:hover {
+  background: #219150;
+}
+
+/* 토글 버튼 */
 .toggle-btn {
   display: none;
   position: absolute;
@@ -57,27 +203,27 @@ body {
     width: 100%;
     border-radius: 15px 15px 0 0;
     box-sizing: border-box;
-    max-height: 50vh;
+    max-height: 60vh;
     overflow-y: auto;
-    transform: translateY(100%); /* 기본적으로 숨김 */
+    transform: translateY(100%);
   }
-
   .control-panel.active {
     transform: translateY(0);
   }
-
   .toggle-btn {
     display: block;
   }
-
-  /* 모바일에서 Leaflet 컨트롤 위치 조정 (버튼 아래로) */
+  .map-controls-overlay {
+    top: 10px;
+    left: 52px;
+  }
   .leaflet-top.leaflet-right {
     top: 60px;
   }
 }
+
 .status {
   font-size: 12px;
-  margin-bottom: 10px;
   padding: 5px;
   border-radius: 3px;
   text-align: center;
@@ -89,6 +235,7 @@ body {
 .err {
   background: #b71c1c;
 }
+
 #details {
   border-top: 1px solid #444;
   padding-top: 10px;
@@ -117,17 +264,14 @@ body {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  /* 줌 레벨에 따라 변경될 투명도 변수 적용 */
   opacity: var(--label-opacity, 1) !important;
-  transition: opacity 0.2s; /* 부드러운 전환 효과 */
+  transition: opacity 0.2s;
 }
-
 .large-grid-label {
   color: var(--large-grid-color) !important;
   font-weight: bolder !important;
   font-size: var(--large-font-size) !important;
 }
-
 .small-grid-label {
   color: var(--small-grid-color) !important;
   font-weight: normal !important;
@@ -148,11 +292,11 @@ body {
 
 .btn-file {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
+  padding: 10px;
   cursor: pointer;
   background: #34495e;
   border: 1px solid #555;
   color: white;
   border-radius: 4px;
+  font-weight: bold;
 }

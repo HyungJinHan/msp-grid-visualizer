@@ -2,6 +2,13 @@ export class UIManager {
   constructor(statusEl, detailsEl) {
     this.statusEl = statusEl;
     this.detailsEl = detailsEl;
+    this.loaderEl = document.getElementById("loader");
+  }
+
+  showLoader(show) {
+    if (this.loaderEl) {
+      this.loaderEl.style.display = show ? "flex" : "none";
+    }
   }
 
   updateTheme(themeName) {

@@ -8,21 +8,75 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css" />
+    <!-- FontAwesome icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   </head>
   <body>
     <div id="map"></div>
+
+    <!-- 로딩 스피너 -->
+    <div id="loader" class="loader-container" style="display: none">
+      <div class="loader"></div>
+      <div class="loader-text">데이터 처리 중...</div>
+    </div>
+
+    <!-- 지도 위 버튼들 -->
+    <div class="map-controls-overlay">
+      <button id="locateBtn" class="map-btn" title="내 위치 찾기">
+        <i class="fas fa-location-crosshairs"></i>
+      </button>
+    </div>
+
     <!-- 모바일용 패널 토글 버튼 -->
     <button id="togglePanel" class="toggle-btn">정보 패널 열기/닫기</button>
 
     <div class="control-panel" id="controlPanel">
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="격자명 검색 (예: 377-05-18)" />
+        <button id="searchBtn"><i class="fas fa-search"></i></button>
+      </div>
+
       <button
         class="btn-file"
         onclick="document.getElementById('fileInput').click()">
-        CSV 파일 직접 선택
+        <i class="fas fa-file-csv"></i> CSV 파일 직접 선택
       </button>
       <input type="file" id="fileInput" style="display: none" accept=".csv" />
+
       <div id="status" class="status">데이터 로딩 중...</div>
-      <div id="details">상세 격자(파란색)를 클릭하면 정보가 나타납니다.</div>
+
+      <div class="setting-row" style="display: none">
+        <label>격자 투명도</label>
+        <input
+          type="range"
+          id="opacityRange"
+          min="0"
+          max="1"
+          step="0.1"
+          value="0.6" />
+      </div>
+
+      <div id="legend" class="legend">
+        <div class="legend-item">
+          <span class="legend-box large"></span> 대형 격자 (250K)
+        </div>
+        <div class="legend-item">
+          <span class="legend-box small"></span> 상세 격자 (단위 격자)
+        </div>
+      </div>
+
+      <div id="details-container">
+        <div id="details">상세 격자(파란색)를 클릭하면 정보가 나타납니다.</div>
+      </div>
+
+      <button id="exportBtn" class="btn-export">
+        <i class="fas fa-download"></i> GeoJSON 내보내기
+      </button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
