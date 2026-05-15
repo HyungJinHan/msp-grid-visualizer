@@ -203,7 +203,7 @@ body {
     width: 100%;
     border-radius: 15px 15px 0 0;
     box-sizing: border-box;
-    max-height: 60vh;
+    max-height: 40vh;
     overflow-y: auto;
     transform: translateY(100%);
   }
