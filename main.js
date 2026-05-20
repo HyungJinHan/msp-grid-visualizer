@@ -7,7 +7,8 @@ import {
 } from "./utils/mapUtils.js";
 import { UIManager } from "./utils/uiManager.js";
 
-const FILE_NAME = "해양수산부_해양공간관리계획도격자_20240307";
+const CSV_FILE = "data";
+const EXPORT_NAME = "해양수산부_해양공간관리계획도격자_20240307";
 
 window.onerror = function (msg, url, line) {
   uiManager.updateStatus("에러: " + msg + " (L:" + line + ")", true);
@@ -87,7 +88,7 @@ document.getElementById("exportBtn").onclick = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${FILE_NAME}.geojson`;
+  a.download = `${EXPORT_NAME}.geojson`;
   a.click();
 };
 
@@ -124,7 +125,7 @@ function handleCSVComplete(results) {
 }
 
 // 자동 로드
-var csvPath = `csv/${FILE_NAME}.csv`;
+var csvPath = `csv/${CSV_FILE}.csv`;
 uiManager.showLoader(true);
 Papa.parse(csvPath, {
   download: true,
